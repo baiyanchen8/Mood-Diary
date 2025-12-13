@@ -4,7 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../data/models/diary_entry.dart';
 import '../../providers/diary_provider.dart';
 import './editor_screen.dart';
-
+import 'detail_screen.dart';
 // import 'editor_screen.dart'; // 下一步才會建，先註解掉
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -167,9 +167,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // 目前 MVP 先跳去新增模式 (會覆蓋舊的)，或者你可以先只做新增
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => EditorScreen(date: selectedDay),
-              ),
+              MaterialPageRoute(builder: (_) => DetailScreen(entry: entry)),
             );
           },
         ),

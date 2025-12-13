@@ -8,8 +8,12 @@ import '../widgets/mood_selector.dart';
 
 class EditorScreen extends ConsumerStatefulWidget {
   final DateTime date; // 從首頁傳入的日期
-
-  const EditorScreen({super.key, required this.date});
+  final DiaryEntry? existingEntry; // 新增這行：傳入舊日記 (可選)
+  const EditorScreen({
+    super.key,
+    required this.date,
+    this.existingEntry, // 新增這行
+  });
 
   @override
   ConsumerState<EditorScreen> createState() => _EditorScreenState();
@@ -21,6 +25,20 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Mood? _mood;
   String? _emoji;
   bool _isSaving = false;
+
+  // 在 _EditorScreenState 類別裡
+
+  @override
+  void initState() {
+    super.initState();
+    // 如果是修改模式，把舊資料填回去
+    if (widget.existingEntry != null) {
+      final entry = widget.existingEntry!;
+      _contentController.text = entry.content;
+      _mood = entry.mood; // 記得確認你的 DiaryEntry 有 getter 取回 Enum
+      _emoji = entry.specificEmoji;
+    }
+  }
 
   @override
   void dispose() {
@@ -47,12 +65,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     setState(() => _isSaving = true);
 
     // 1. 建立資料物件
+    // 在 _saveDiary 方法內
     final entry = DiaryEntry()
+      ..id =
+          widget.existingEntry?.id ??
+          0 // 核心：如果有舊 ID 就沿用，沒有就用 0
       ..date = widget.date
-      ..createdAt = DateTime.now()
+      ..createdAt = widget.existingEntry?.createdAt ?? DateTime.now()
       ..updatedAt = DateTime.now()
-      ..mood =
-          _mood! // 使用 Setter 設定 Mood Enum
+      ..mood = _mood!
       ..specificEmoji = _emoji!
       ..content = _contentController.text;
 
