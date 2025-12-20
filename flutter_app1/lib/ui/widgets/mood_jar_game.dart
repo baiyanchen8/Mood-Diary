@@ -21,7 +21,7 @@ class MoodPhysicsGame extends Forge2DGame {
   final List<DiaryEntry> entries;
 
   // 重力向下
-  MoodPhysicsGame(this.entries) : super(gravity: Vector2(0, 20));
+  MoodPhysicsGame(this.entries) : super(gravity: Vector2(0, 60));
 
   @override
   Future<void> onLoad() async {
