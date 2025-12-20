@@ -31,6 +31,10 @@ dependencies:
   image_picker: ^1.0.7
   path: ^1.9.0  # 用來處理副檔名
 
+  # share 功能
+  screenshot: ^3.0.0   # 用來截圖
+  share_plus: ^10.1.2  # 用來呼叫系統分享
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
