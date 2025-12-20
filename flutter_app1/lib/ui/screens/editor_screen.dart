@@ -6,6 +6,11 @@ import '../../data/models/mood.dart';
 import '../../data/services/local_db_service.dart';
 import '../widgets/mood_selector.dart';
 
+import 'dart:io'; // 處理檔案
+import 'package:image_picker/image_picker.dart'; // 選圖
+import 'package:path_provider/path_provider.dart'; // 找路徑
+import 'package:path/path.dart' as p; // 處理路徑字串
+
 class EditorScreen extends ConsumerStatefulWidget {
   final DateTime date; // 從首頁傳入的日期
   final DiaryEntry? existingEntry; // 新增這行：傳入舊日記 (可選)
@@ -44,6 +49,26 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   void dispose() {
     _contentController.dispose();
     super.dispose();
+  }
+
+  // 輔助函式：在游標處插入文字
+  void _insertTextAtCursor(String text) {
+    final textSelection = _contentController.selection;
+    final newText = text;
+
+    if (textSelection.start < 0) {
+      // 如果沒有焦點，直接加在最後面
+      _contentController.text += '\n$newText\n';
+    } else {
+      // 插在游標中間
+      final currentText = _contentController.text;
+      final newValue = currentText.replaceRange(
+        textSelection.start,
+        textSelection.end,
+        '\n$newText\n', // 前後換行比較安全
+      );
+      _contentController.text = newValue;
+    }
   }
 
   // 儲存邏輯
@@ -86,7 +111,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       await _showChickenSoupDialog(_mood!);
       if (mounted) Navigator.pop(context); // 關閉頁面回首頁
     }
-  }
+  } //future _saveDiary
 
   // 顯示雞湯彈窗
   Future<void> _showChickenSoupDialog(Mood mood) async {
@@ -110,6 +135,31 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
         ],
       ),
     );
+  } //_showChickenSoupDialog
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    // 1. 開啟相簿選圖
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return;
+
+    // 2. 取得 App 專屬的文件目錄
+    final appDir = await getApplicationDocumentsDirectory();
+    final fileName = p.basename(image.path); // 取得檔名 (ex: photo.jpg)
+    // 建立一個 images 子資料夾保持整潔
+    final savedImageDir = Directory('${appDir.path}/images');
+    if (!savedImageDir.existsSync()) {
+      savedImageDir.createSync(recursive: true);
+    }
+
+    final savedImagePath = '${savedImageDir.path}/$fileName';
+
+    // 3. 將圖片複製到 App 目錄
+    await File(image.path).copy(savedImagePath);
+
+    // 4. 在游標位置插入 Markdown 語法
+    _insertTextAtCursor('![圖片]($savedImagePath)');
   }
 
   @override
@@ -121,6 +171,10 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       appBar: AppBar(
         title: Text(dateStr),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.image),
+            onPressed: _pickImage,
+          ), //IconButton
           IconButton(
             onPressed: _isSaving ? null : _saveDiary,
             icon: _isSaving

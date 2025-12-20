@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../data/models/diary_entry.dart';
 import '../../data/services/local_db_service.dart';
 import 'editor_screen.dart';
+import 'dart:io';
 
 class DetailScreen extends ConsumerWidget {
   final DiaryEntry entry;
@@ -80,6 +81,22 @@ class DetailScreen extends ConsumerWidget {
                 children: [
                   MarkdownBody(
                     data: entry.content,
+                    sizedImageBuilder: (config) {
+                      final uri = config.uri; // 從 config 中取得 uri
+
+                      if (uri.scheme != 'http' && uri.scheme != 'https') {
+                        // 處理本地圖片
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.file(File(uri.toFilePath())),
+                          ),
+                        );
+                      }
+                      // 處理網路圖片 (選用，目前回傳空)
+                      return const SizedBox();
+                    },
                     styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
                         .copyWith(
                           p: const TextStyle(fontSize: 16, height: 1.6),
