@@ -64,9 +64,12 @@ class _DetailScreenState extends ConsumerState<DetailScreen> {
 
       // 4. 呼叫系統分享
       final dateStr = DateFormat.yMMMd('zh_TW').format(widget.entry.date);
+      final box = context.findRenderObject() as RenderBox?;
       await Share.shareXFiles([
         XFile(imagePath.path),
-      ], text: 'Mood Diary 心情日記 - $dateStr');
+      ], text: 'Mood Diary 心情日記 - $dateStr',
+      sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
