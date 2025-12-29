@@ -65,10 +65,11 @@ class _StatsScreenState extends ConsumerState<StatsScreen>
       final directory = await getTemporaryDirectory();
       final imagePath = await File('${directory.path}/$fileName').create();
       await imagePath.writeAsBytes(imageBytes);
-
+      final box = context.findRenderObject() as RenderBox?;
       await Share.shareXFiles([
         XFile(imagePath.path),
-      ], text: isChartTab ? '我的心情分佈 📊' : '我的情緒罐子 🫙');
+      ], text: isChartTab ? '我的心情分佈 📊' : '我的情緒罐子 🫙',sharePositionOrigin: box!.localToGlobal(Offset.zero) & box.size,);
+      
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
