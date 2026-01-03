@@ -1,35 +1,63 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/mood.dart';
+import '../models/quote.dart';
+import 'local_db_service.dart';
+import '../../objectbox.g.dart';
+
+final quoteServiceProvider = Provider<QuoteService>((ref) {
+  final dbService = ref.watch(localDbServiceProvider);
+  return QuoteService(dbService);
+});
 
 class QuoteService {
-  // 隨機抽選一句雞湯
-  static Future<String> getQuoteForMood(Mood mood) async {
-    try {
-      // 1. 讀取 JSON 檔案
-      final String jsonString = await rootBundle.loadString(
-        'assets/data/quotes.json',
-      );
-      final List<dynamic> jsonList = jsonDecode(jsonString);
+  final LocalDbService _dbService;
+  List<dynamic>? _builtinQuotes;
 
-      // 2. 篩選符合當下心情的語錄
-      // Mood.name 會回傳 "happy", "sad" 等字串，這必須跟 JSON 的 category 一致
-      final List<dynamic> matchingQuotes = jsonList.where((item) {
-        return item['category'] == mood.name;
-      }).toList();
+  QuoteService(this._dbService);
 
-      if (matchingQuotes.isEmpty) {
-        return "今天也要加油喔！"; // 萬一沒對應到，給個預設值
-      }
+  Future<void> _loadBuiltinQuotes() async {
+    if (_builtinQuotes != null) return;
+    final jsonString = await rootBundle.loadString('assets/data/quotes.json');
+    _builtinQuotes = jsonDecode(jsonString);
+  }
 
-      // 3. 隨機選一個
-      final random = Random();
-      final index = random.nextInt(matchingQuotes.length);
-      return matchingQuotes[index]['content'] as String;
-    } catch (e) {
-      print("讀取語錄失敗: $e");
-      return "心靜自然涼。"; // 發生錯誤時的備案
+  Future<String> getQuoteForMood(Mood mood) async {
+    await _loadBuiltinQuotes();
+
+    final moodKey = mood.name; // happy, sad...
+
+    // 1. 撈取內建雞湯 (Assets)
+    final builtinMatches = _builtinQuotes?.where((q) => q['category'] == moodKey).toList() ?? [];
+
+    // 2. 撈取自定義雞湯 (DB)
+    // 使用 ObjectBox Query
+    final query = _dbService.quoteBox
+        .query(Quote_.category.equals(moodKey))
+        .build();
+    final customMatches = query.find();
+    query.close();
+
+    // 3. 合併清單
+    final allMatches = [...builtinMatches, ...customMatches];
+
+    if (allMatches.isEmpty) {
+      return "今天也要加油喔！"; // Fallback
     }
+
+    // 4. 隨機抽選
+    final random = Random();
+    final selected = allMatches[random.nextInt(allMatches.length)];
+
+    // 判斷是 Map (內建) 還是 Quote 物件 (自定義)
+    if (selected is Map) {
+      return selected['content'] as String;
+    } else if (selected is Quote) {
+      return selected.content;
+    }
+
+    return "保持微笑！";
   }
 }

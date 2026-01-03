@@ -1,9 +1,3 @@
-沒問題，撰寫一份清晰的 **規格書 (Specification, Spec)** 是開發成功的關鍵，特別是你希望「快速開發」時，Spec 能防止功能蔓延 (Feature Creep)。
-
-這份 Spec 整合了你剛才確認的所有需求（日曆首頁、固定心情分類、本地雞湯庫、Isar 資料庫）。你可以將此文檔視為你的開發藍圖 (Blue Print)。
-
------
-
 # 專案規格書 (Project Specification)
 
 **專案名稱 (暫定):** MoodDiary / 心情日記
@@ -158,7 +152,7 @@ class DiaryEntry {
   * **Language:** Dart / Flutter (最新 Stable 版本)
   * **Architecture:** Feature-first or Layer-first (Clean Architecture 簡化版)
   * **State Management:** `flutter_riverpod`
-  * **Database:** `isar`, `isar_flutter_libs`
+  * **Database:** `objectbox`, `objectbox_flutter_libs`
   * **UI Components:**
       * Calendar: `table_calendar`
       * Charts: `fl_chart` (用於之後的心情趨勢)
@@ -180,11 +174,11 @@ class DiaryEntry {
 
 -----
 
-## 6\. 開發階段 (Milestones)
+## 6\. 開發階段 (Milestones,已完成階段)
 
 1.  **Phase 1: Skeleton (1-2 天)**
-      * 搭建專案，設定 Riverpod & Isar。
-      * 完成 `Mood` Enum 定義與 `DiaryEntry` Schema。
+      * 搭建專案，設定 Riverpod & ObjectBox。
+      * 完成 `Mood` Enum 定義與 `DiaryEntry` Entity (ObjectBox)。
       * 確認 `assets/quotes.json` 讀取正常。
 2.  **Phase 2: Calendar & Editor (2-3 天)**
       * 實作首頁日曆，能顯示假資料的 Emoji。
@@ -197,4 +191,30 @@ class DiaryEntry {
 
 -----
 
-這份 Spec 是否符合你目前的想像？如果沒問題，你可以將此存檔，我們就進入 Phase 1 的環境搭建與 Model 撰寫。
+## 7. 待辦事項 / 未來展望 (To-Do / Future Roadmap)
+
+1.  **雞湯擴充 (Custom Quote Import):**
+    *   **功能:** 支援匯入外部 JSON 檔案來新增自定義的隨機雞湯集。
+    *   **技術細節:**
+        *   使用 `file_selector` 或 `file_picker` 讓使用者選擇手機內的 JSON 檔案。
+        *   實作 JSON Schema 驗證邏輯，確保格式包含 `content`, `category` 等必要欄位。
+        *   將匯入的資料存入 ObjectBox 新增的 `Quote` Entity，或序列化存於 `ApplicationDocumentsDirectory` 的本地檔案中。
+        *   修改 `QuoteService`，使其能同時從 `assets` (內建) 與本地儲存 (自定義) 中隨機抽選。
+
+2.  **深色模式 (Dark Mode):**
+    *   **功能:** 完整支援 App 介面的深色主題切換。
+    *   **技術細節:**
+        *   在 `Riverpod` 中建立 `ThemeModeProvider` 管理主題狀態 (System / Light / Dark)。
+        *   使用 `shared_preferences` 持久化使用者的主題偏好。
+        *   在 `main.dart` 的 `MaterialApp` 中設定 `theme` (亮色) 與 `darkTheme` (深色)。
+        *   調整 `Mood` Enum 的顏色定義，確保在深色背景下的對比度與可讀性。
+
+3.  **AI 模式升級 (Multi-Provider AI):**
+    *   **功能:** 除了現有的本地 LM Studio 支援外，新增雲端 API 支援 (OpenAI, Gemini)。
+    *   **技術細節:**
+        *   **架構重構:** 建立 `AiService` 介面 (Interface)，並實作不同策略模式 (Strategy Pattern)：
+            *   `LocalAiService`: 呼叫本地 LM Studio (現有)。
+            *   `OpenAiService`: 呼叫 `https://api.openai.com/v1/chat/completions`。
+            *   `GeminiAiService`: 使用 `google_generative_ai` 套件。
+        *   **設定頁面:** 新增 API Key 輸入欄位與 Provider 切換選單。
+        *   **安全性:** 使用 `flutter_secure_storage` 安全地儲存使用者的 API Keys。

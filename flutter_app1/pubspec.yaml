@@ -40,6 +40,10 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
 
+  # 壓縮與解壓縮 + 檔案選取 +備份還原
+  archive: ^3.6.1
+  file_picker: ^8.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

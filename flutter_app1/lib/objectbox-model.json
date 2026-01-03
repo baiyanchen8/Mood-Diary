@@ -63,10 +63,41 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "2:1067589770953631987",
+      "lastPropertyId": "4:7568174623838166178",
+      "name": "Quote",
+      "properties": [
+        {
+          "id": "1:7765268502885458",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5826635064836403054",
+          "name": "category",
+          "type": 9,
+          "flags": 2048,
+          "indexId": "2:6774069392427766861"
+        },
+        {
+          "id": "3:6090555629558749583",
+          "name": "content",
+          "type": 9
+        },
+        {
+          "id": "4:7568174623838166178",
+          "name": "author",
+          "type": 9
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "1:2129283912504731308",
-  "lastIndexId": "1:1737206013969646168",
+  "lastEntityId": "2:1067589770953631987",
+  "lastIndexId": "2:6774069392427766861",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

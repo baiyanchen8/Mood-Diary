@@ -126,7 +126,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 context,
               ).showSnackBar(const SnackBar(content: Text("連線失敗，已切換回本地模式")));
           }
-          quoteContent = await QuoteService.getQuoteForMood(_mood!);
+          // 修改為使用 Provider
+          quoteContent = await ref.read(quoteServiceProvider).getQuoteForMood(_mood!);
         }
       }
 
@@ -262,11 +263,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             TextField(
               controller: _contentController,
               maxLines: 10, // 讓它看起來像筆記本
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: '支援 Markdown 格式...',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 filled: true,
-                fillColor: Color(0xFFFAFAFA),
+                fillColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.grey[800] // 深色模式：使用深灰背景，搭配白色文字
+                    : const Color(0xFFFAFAFA), // 淺色模式：使用米白背景，搭配黑色文字
               ),
             ),
           ],

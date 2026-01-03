@@ -16,6 +16,7 @@ import 'package:objectbox/objectbox.dart' as obx;
 import 'package:objectbox_flutter_libs/objectbox_flutter_libs.dart';
 
 import 'data/models/diary_entry.dart';
+import 'data/models/quote.dart';
 
 export 'package:objectbox/objectbox.dart'; // so that callers only have to import this file
 
@@ -79,6 +80,36 @@ final _entities = <obx_int.ModelEntity>[
             flags: 0)
       ],
       relations: <obx_int.ModelRelation>[],
+      backlinks: <obx_int.ModelBacklink>[]),
+  obx_int.ModelEntity(
+      id: const obx_int.IdUid(2, 1067589770953631987),
+      name: 'Quote',
+      lastPropertyId: const obx_int.IdUid(4, 7568174623838166178),
+      flags: 0,
+      properties: <obx_int.ModelProperty>[
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(1, 7765268502885458),
+            name: 'id',
+            type: 6,
+            flags: 1),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(2, 5826635064836403054),
+            name: 'category',
+            type: 9,
+            flags: 2048,
+            indexId: const obx_int.IdUid(2, 6774069392427766861)),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(3, 6090555629558749583),
+            name: 'content',
+            type: 9,
+            flags: 0),
+        obx_int.ModelProperty(
+            id: const obx_int.IdUid(4, 7568174623838166178),
+            name: 'author',
+            type: 9,
+            flags: 0)
+      ],
+      relations: <obx_int.ModelRelation>[],
       backlinks: <obx_int.ModelBacklink>[])
 ];
 
@@ -117,8 +148,8 @@ Future<obx.Store> openStore(
 obx_int.ModelDefinition getObjectBoxModel() {
   final model = obx_int.ModelInfo(
       entities: _entities,
-      lastEntityId: const obx_int.IdUid(1, 2129283912504731308),
-      lastIndexId: const obx_int.IdUid(1, 1737206013969646168),
+      lastEntityId: const obx_int.IdUid(2, 1067589770953631987),
+      lastIndexId: const obx_int.IdUid(2, 6774069392427766861),
       lastRelationId: const obx_int.IdUid(0, 0),
       lastSequenceId: const obx_int.IdUid(0, 0),
       retiredEntityUids: const [],
@@ -194,6 +225,44 @@ obx_int.ModelDefinition getObjectBoxModel() {
                     .vTableGetNullable(buffer, rootOffset, 22);
 
           return object;
+        }),
+    Quote: obx_int.EntityDefinition<Quote>(
+        model: _entities[1],
+        toOneRelations: (Quote object) => [],
+        toManyRelations: (Quote object) => {},
+        getId: (Quote object) => object.id,
+        setId: (Quote object, int id) {
+          object.id = id;
+        },
+        objectToFB: (Quote object, fb.Builder fbb) {
+          final categoryOffset = fbb.writeString(object.category);
+          final contentOffset = fbb.writeString(object.content);
+          final authorOffset =
+              object.author == null ? null : fbb.writeString(object.author!);
+          fbb.startTable(5);
+          fbb.addInt64(0, object.id);
+          fbb.addOffset(1, categoryOffset);
+          fbb.addOffset(2, contentOffset);
+          fbb.addOffset(3, authorOffset);
+          fbb.finish(fbb.endTable());
+          return object.id;
+        },
+        objectFromFB: (obx.Store store, ByteData fbData) {
+          final buffer = fb.BufferContext(fbData);
+          final rootOffset = buffer.derefObject(0);
+          final contentParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 8, '');
+          final categoryParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGet(buffer, rootOffset, 6, '');
+          final authorParam = const fb.StringReader(asciiOptimization: true)
+              .vTableGetNullable(buffer, rootOffset, 10);
+          final object = Quote(
+              content: contentParam,
+              category: categoryParam,
+              author: authorParam)
+            ..id = const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0);
+
+          return object;
         })
   };
 
@@ -241,4 +310,22 @@ class DiaryEntry_ {
   /// see [DiaryEntry.cachedQuoteContent]
   static final cachedQuoteContent =
       obx.QueryStringProperty<DiaryEntry>(_entities[0].properties[9]);
+}
+
+/// [Quote] entity fields to define ObjectBox queries.
+class Quote_ {
+  /// see [Quote.id]
+  static final id = obx.QueryIntegerProperty<Quote>(_entities[1].properties[0]);
+
+  /// see [Quote.category]
+  static final category =
+      obx.QueryStringProperty<Quote>(_entities[1].properties[1]);
+
+  /// see [Quote.content]
+  static final content =
+      obx.QueryStringProperty<Quote>(_entities[1].properties[2]);
+
+  /// see [Quote.author]
+  static final author =
+      obx.QueryStringProperty<Quote>(_entities[1].properties[3]);
 }

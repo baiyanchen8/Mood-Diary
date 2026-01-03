@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:objectbox/objectbox.dart';
 import '../models/diary_entry.dart';
+import '../models/quote.dart';
 import '../../objectbox.g.dart'; // 這是自動生成的，等下會有
 
 final localDbServiceProvider = Provider<LocalDbService>((ref) {
@@ -12,9 +13,11 @@ final localDbServiceProvider = Provider<LocalDbService>((ref) {
 class LocalDbService {
   late final Store store;
   late final Box<DiaryEntry> box;
+  late final Box<Quote> quoteBox;
 
   LocalDbService._create(this.store) {
     box = store.box<DiaryEntry>();
+    quoteBox = store.box<Quote>();
   }
 
   static Future<LocalDbService> init() async {
@@ -103,5 +106,19 @@ class LocalDbService {
 
   DateTime cleanDate(DateTime dt) {
     return DateTime(dt.year, dt.month, dt.day);
+  }
+
+  // --- Backup & Restore ---
+  List<DiaryEntry> getAllEntries() {
+    return box.getAll();
+  }
+
+  void restoreEntries(List<DiaryEntry> entries) {
+    box.putMany(entries);
+  }
+
+  // --- Quotes ---
+  void addQuotes(List<Quote> quotes) {
+    quoteBox.putMany(quotes);
   }
 }
