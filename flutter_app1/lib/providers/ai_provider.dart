@@ -8,12 +8,14 @@ class AiState {
   final String localUrl;
   final String openAiKey;
   final String geminiKey;
+  final String geminiModelName;
 
   AiState({
     this.provider = AiProviderType.local,
     this.localUrl = 'http://10.0.2.2:1234',
     this.openAiKey = '',
     this.geminiKey = '',
+    this.geminiModelName = 'gemini-pro',
   });
 
   AiState copyWith({
@@ -21,12 +23,14 @@ class AiState {
     String? localUrl,
     String? openAiKey,
     String? geminiKey,
+    String? geminiModelName,
   }) {
     return AiState(
       provider: provider ?? this.provider,
       localUrl: localUrl ?? this.localUrl,
       openAiKey: openAiKey ?? this.openAiKey,
       geminiKey: geminiKey ?? this.geminiKey,
+      geminiModelName: geminiModelName ?? this.geminiModelName,
     );
   }
 }
@@ -46,12 +50,14 @@ class AiNotifier extends StateNotifier<AiState> {
     // 從安全儲存區讀取 Key
     final openAiKey = await _storage.read(key: 'openai_key') ?? '';
     final geminiKey = await _storage.read(key: 'gemini_key') ?? '';
+    final geminiModelName = prefs.getString('gemini_model_name') ?? 'gemini-pro';
 
     state = AiState(
       provider: AiProviderType.values[providerIndex],
       localUrl: localUrl,
       openAiKey: openAiKey,
       geminiKey: geminiKey,
+      geminiModelName: geminiModelName,
     );
   }
 
@@ -76,6 +82,12 @@ class AiNotifier extends StateNotifier<AiState> {
     await _storage.write(key: 'gemini_key', value: key);
     state = state.copyWith(geminiKey: key);
   }
+
+  Future<void> setGeminiModelName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('gemini_model_name', name);
+    state = state.copyWith(geminiModelName: name);
+  }
 }
 
 final aiProvider = StateNotifierProvider<AiNotifier, AiState>((ref) => AiNotifier());
@@ -86,6 +98,6 @@ final aiServiceProvider = Provider<AiService>((ref) {
   switch (state.provider) {
     case AiProviderType.local: return LocalAiService(state.localUrl);
     case AiProviderType.openai: return OpenAiService(state.openAiKey);
-    case AiProviderType.gemini: return GeminiAiService(state.geminiKey);
+    case AiProviderType.gemini: return GeminiAiService(state.geminiKey, state.geminiModelName);
   }
 });

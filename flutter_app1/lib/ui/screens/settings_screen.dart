@@ -25,6 +25,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late TextEditingController _urlController;
   late TextEditingController _openAiKeyController;
   late TextEditingController _geminiKeyController;
+  late TextEditingController _geminiModelController;
 
   @override
   void initState() {
@@ -34,6 +35,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _urlController = TextEditingController(text: aiState.localUrl);
     _openAiKeyController = TextEditingController(text: aiState.openAiKey);
     _geminiKeyController = TextEditingController(text: aiState.geminiKey);
+    _geminiModelController = TextEditingController(text: aiState.geminiModelName);
   }
 
   @override
@@ -41,6 +43,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _urlController.dispose();
     _openAiKeyController.dispose();
     _geminiKeyController.dispose();
+    _geminiModelController.dispose();
     super.dispose();
   }
 
@@ -177,6 +180,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         obscureText: true,
                         onChanged: (val) => aiNotifier.setGeminiKey(val),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _geminiModelController,
+                        decoration: const InputDecoration(
+                          labelText: "Gemini Model Name",
+                          hintText: "gemini-pro, gemini-1.5-flash...",
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.psychology),
+                          isDense: true,
+                        ),
+                        onChanged: (val) => aiNotifier.setGeminiModelName(val),
                       ),
                     ],
                   ],

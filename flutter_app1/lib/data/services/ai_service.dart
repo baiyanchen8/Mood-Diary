@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:google_generative_ai/google_generative_ai.dart';
@@ -52,6 +53,8 @@ class OpenAiService implements AiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
         return data['choices'][0]['message']['content'].toString().trim();
+      } else {
+        print('OpenAI API Error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       print('OpenAI Error: $e');
@@ -63,19 +66,30 @@ class OpenAiService implements AiService {
 /// 3. Google Gemini 實作
 class GeminiAiService implements AiService {
   final String apiKey;
-  GeminiAiService(this.apiKey);
+  final String modelName;
+  GeminiAiService(this.apiKey, this.modelName);
 
   @override
   Future<String?> getQuote(String content, Mood mood) async {
     if (apiKey.isEmpty) return null;
     try {
-      final model = GenerativeModel(model: 'gemini-pro', apiKey: apiKey);
+      // 使用使用者設定的模型名稱
+      final model = GenerativeModel(model: modelName, apiKey: apiKey);
       final prompt = '你是一個富有同理心的心理諮商師。請根據使用者的日記內容與心情，給予一句簡短、溫暖且具有力量的雞湯語錄（繁體中文，不超過50字）。\n心情：${mood.label}\n日記：$content';
-      final response = await model.generateContent([Content.text(prompt)]);
+      
+      // 加入 30 秒超時設定，避免因網路延遲導致無回應
+      final response = await model.generateContent([Content.text(prompt)])
+          .timeout(const Duration(seconds: 30));
+          
       return response.text;
+    } on TimeoutException catch (_) {
+      print('Gemini Error: 連線逾時 (Timeout)，請檢查網路狀況。');
     } catch (e) {
       print('Gemini Error: $e');
+      if (e.toString().contains('403')) {
+        print('⚠️ 權限錯誤: 請檢查 API Key 是否設定了 "Android 應用程式限制"。請先改為 "無限制 (None)" 進行測試。');
+      }
     }
-    return null;
+    return null; 
   }
 }
