@@ -42,7 +42,8 @@
 
 ### 1. Google Gemini (推薦)
 *   **取得金鑰**: 前往 Google AI Studio 申請免費的 API Key。
-*   **設定**: 選擇 `Google Gemini`，並將 API Key 貼入對應欄位。
+*   **取得模型**: 前往 [google api](https://ai.google.dev/gemini-api/docs/pricing?hl=zh-tw) 查詢模型名稱。
+*   **設定**: 選擇 `Google Gemini`，並將 API Key 與 model name 貼入對應欄位。
 
 ### 2. OpenAI (GPT-3.5/4)
 *   **取得金鑰**: 前往 OpenAI Platform 申請。
