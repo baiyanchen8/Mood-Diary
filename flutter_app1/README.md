@@ -1,220 +1,236 @@
-# 專案規格書 (Project Specification)
+這份規格書是根據您上傳的原始碼（Repo: `baiyanchen8/mood-diary`）以及 `README.md` 和 `pubspec.yaml` 的實際內容進行重寫的。
 
-**專案名稱 (暫定):** MoodDiary / 心情日記
-**平台:** Android (Flutter)
-**版本:** MVP (Minimum Viable Product)
-**核心價值:** 本地優先 (Privacy-First)、情緒追蹤、即時雞湯回饋。
+目前的專案狀態已經超越了原本的 MVP（最小可行性產品）規劃，包含了更完整的 AI 整合、資料備份機制以及遊戲化元素。
 
------
+以下是更新後的專案規格書：
 
-## 1\. 使用者流程 (User Flow)
+---
+
+# 專案規格書 (Project Specification) - Rev. 2.0
+
+**專案名稱:** Mood Diary (心情日記)
+**平台:** Cross-Platform (Android / iOS / Windows / Linux)
+**版本:** v0.1.0
+**核心價值:** 本地優先 (Local-First)、隱私安全 (Privacy)、AI 情感陪伴 (AI Companionship)。
+
+---
+
+## 1. 使用者流程 (User Flow)
 
 ```mermaid
 graph TD
     Start[開啟 App] --> HomeScreen[首頁: 月曆視圖]
-    
-    subgraph View_Flow [查看/回顧]
-        HomeScreen --> |點擊有日記的日期| DetailScreen[日記詳情頁]
-        DetailScreen --> |顯示| Content[MD 內容 + 圖片]
-        DetailScreen --> |顯示| Quote[當日獲得的雞湯卡片]
+
+    subgraph View_Flow [瀏覽與管理]
+        HomeScreen --> |點擊日期| DetailScreen[日記詳情頁]
+        DetailScreen --> |編輯| EditorScreen
+        HomeScreen --> |導覽列| StatsScreen[統計與回顧]
+        StatsScreen --> |遊玩| MoodJarGame[情緒瓶小遊戲]
+        HomeScreen --> |設定| SettingsScreen[設定頁]
     end
-    
-    subgraph Write_Flow [撰寫/紀錄]
-        HomeScreen --> |點擊無日記的日期 / +號按鈕| EditorScreen[編輯頁]
-        EditorScreen --> |1. 撰寫| InputText[Markdown 文字 / 插入圖片]
-        EditorScreen --> |2. 選擇| MoodSelect[選擇心情與 Emoji]
-        MoodSelect --> |3. 儲存| SaveAction[寫入 DB]
-        SaveAction --> |觸發| Logic[雞湯匹配邏輯]
-        Logic --> |回饋| FeedbackDialog[顯示雞湯彈窗]
-        FeedbackDialog --> HomeScreen
+
+    subgraph Write_Flow [撰寫日記]
+        HomeScreen --> |+號按鈕| EditorScreen[編輯頁]
+        EditorScreen --> |1. 撰寫| InputText[Markdown / 圖片]
+        EditorScreen --> |2. 選擇| MoodSelect[情緒選擇器]
+        MoodSelect --> |3. 儲存| SaveAction[寫入 ObjectBox]
+        SaveAction --> |觸發| AILogic[雞湯生成 (本地/雲端)]
+        AILogic --> |回饋| FeedbackDialog[顯示 AI 安慰/語錄]
     end
+
+    subgraph Settings_Flow [系統設定]
+        SettingsScreen --> AI_Config[AI 供應商設定 (Gemini/OpenAI/Local)]
+        SettingsScreen --> Data_Manage[備份與還原 (ZIP)]
+        SettingsScreen --> Quote_Manage[語錄庫管理 (匯入 JSON)]
+    end
+
 ```
 
------
+---
 
-## 2\. 功能需求 (Functional Requirements)
+## 2. 功能需求 (Functional Requirements)
 
 ### 2.1 首頁 (Home / Calendar)
 
-  * **預設視圖:** 顯示當前月份的日曆 (使用 `table_calendar`)。
-  * **日期狀態顯示:**
-      * **無日記:** 顯示日期數字。
-      * **有日記:** 在日期下方顯示該日記選定的 **「具體 Emoji」** (如 😊, 🤬)。
-      * **今日:** 特殊顏色標記。
-  * **互動:**
-      * 點擊空白日期 -\> 跳轉至 **編輯頁** (自動帶入該日期)。
-      * 點擊已有日記日期 -\> 跳轉至 **詳情頁**。
-  * **統計摘要 (Header):** (Optional for MVP) 簡單顯示本月「快樂天數」vs「悲傷天數」。
+* **月曆元件:** 使用 `table_calendar` 顯示。
+* **狀態呈現:**
+* **有日記:** 顯示該日記選定的 **「具體 Emoji」** (如 😊, 🤬)。
+* **今日:** 特殊高亮標記。
+
+
+* **導航:** 底部或頂部導航欄，連接「首頁」、「統計」、「設定」。
 
 ### 2.2 編輯頁 (Editor)
 
-  * **日期顯示:** 顯示當前正在編輯的日期 (唯讀或可修改，MVP 建議唯讀，避免邏輯複雜)。
-  * **內容輸入:**
-      * 支援 Markdown 基本語法 (標題, 列表, 粗體)。
-      * `TextField` 多行輸入。
-  * **多媒體:**
-      * 按鈕：插入圖片 (從相簿選取)。
-      * 處理：將圖片複製到 App 本地目錄 (`ApplicationDocumentsDirectory`)，資料庫僅存路徑 `String`。
-  * **心情選擇器 (Mood Selector):**
-      * **UI:** 兩層式選單或展開式 UI。
-      * **第一層 (分類):** 快樂、悲傷、生氣、愛情、中立。
-      * **第二層 (具體 Emoji):** 點擊分類後，滑出對應的 Emoji 列表供選擇。
-      * **驗證:** 必須選擇心情才能儲存。
+* **富文本編輯:**
+* 支援 Markdown 語法 (粗體、標題等)。
+* **圖片插入:** 支援從相簿選取圖片，將圖片檔案複製到 App `ApplicationDocumentsDirectory` 本地沙盒中，資料庫僅存相對路徑。
 
-### 2.3 詳情頁 (Detail)
 
-  * **唯讀模式:** 渲染 Markdown (`flutter_markdown`)。
-  * **雞湯展示區:** 顯示該篇日記當初獲得的雞湯語錄。
-  * **操作:** 編輯 (跳轉回 Editor)、刪除 (跳出確認)。
+* **心情選擇器:** 選擇五大類情緒 (Happy, Sad, Angry, Love, Neutral) 及其對應的子 Emoji。
+* **即時回饋:** 儲存後立即觸發 AI 或語錄回饋。
 
-### 2.4 雞湯推薦系統 (Recommendation Engine)
+### 2.3 統計與遊戲 (Stats & Game)
 
-  * **觸發時機:** 使用者按下「儲存」按鈕後。
-  * **邏輯:**
-    1.  讀取使用者選的 `Mood Category` (例如: `Mood.sad`)。
-    2.  讀取本地 `assets/quotes.json`。
-    3.  篩選 `category == 'sad'` 的所有語錄。
-    4.  隨機 `Random()` 選取一條。
-    5.  (Optional) 若有網路且使用者開啟「AI 分析」，則非同步呼叫 LLM API 覆蓋此結果。
+* **情緒分佈:** 使用 `fl_chart` (Pie Chart) 顯示本月或整體的快樂、悲傷等情緒比例。
+* **情緒瓶遊戲 (Mood Jar):**
+* 基於 `flame` 與 `flame_forge2d` 物理引擎開發。
+* 將使用者的情緒 Emoji 變成物理實體掉落瓶中，提供趣味性的視覺回饋。
 
------
 
-## 3\. 資料結構 (Data Model & Schema)
 
-### 3.1 心情定義 (Enum)
+### 2.4 AI 雞湯與回饋系統 (AI & Quotes)
 
-路徑: `lib/data/models/mood.dart`
+* **雙模式運作:**
+1. **本地模式 (Local):** 隨機讀取內建或匯入的 JSON 語錄庫。
+2. **AI 模式 (Remote/Local LLM):** 根據日記內容進行語意分析，生成客製化安慰。
 
-| Enum Value | Label (TW) | Emojis (Specific) | Color Code (Hex) |
-| :--- | :--- | :--- | :--- |
-| `happy` | 快樂 | 😊, 😄, 😁 | `#FFA500` (Orange) |
-| `sad` | 悲傷 | 😢, 😞, 😔 | `#607D8B` (BlueGrey) |
-| `angry` | 生氣 | 😠, 😡, 🤬 | `#FF5252` (RedAccent) |
-| `love` | 愛情 | ❤️, 😘, 😍 | `#FF4081` (PinkAccent) |
-| `neutral` | 平靜/無感 | 😒, 😑, 😐 | `#9E9E9E` (Grey) |
 
-### 3.2 日記實體 (Isar Collection)
+* **多供應商支援 (Multi-Provider):**
+* **Google Gemini:** 透過 `google_generative_ai` 串接。
+* **OpenAI:** 透過 HTTP 呼叫 GPT 模型。
+* **Local LLM:** 支援串接 LM Studio (本地 Server)。
 
-路徑: `lib/data/models/diary_entry.dart`
+
+
+### 2.5 資料管理 (Data Management)
+
+* **備份 (Export):** 將資料庫 (`data.mdb`) 與所有圖片資源打包成 `.zip` 檔。
+* **還原 (Import):** 解壓縮 `.zip` 檔並覆蓋本地資料，支援跨裝置遷移。
+* **語錄擴充:** 支援匯入外部 JSON 檔案以擴充本地語錄庫。
+
+---
+
+## 3. 資料結構 (Data Model)
+
+### 3.1 資料庫技術
+
+* **Engine:** **ObjectBox** (NoSQL, 高效能本地資料庫)。
+* **Schema:** 定義於 `lib/objectbox-model.json`。
+
+### 3.2 實體定義 (Entity)
+
+**Mood (Enum):**
+定義於 `lib/data/models/mood.dart`
+
+* 包含：`happy`, `sad`, `angry`, `love`, `neutral`。
+* 屬性：顏色值、顯示標籤、Emoji 集合。
+
+**DiaryEntry (ObjectBox Entity):**
+定義於 `lib/data/models/diary_entry.dart`
 
 ```dart
-@collection
+@Entity()
 class DiaryEntry {
-  Id id = Isar.autoIncrement;
+  @Id()
+  int id = 0; // ObjectBox 預設 ID 格式
 
-  @Index(unique: true) // 確保一天一篇，或使用複合索引
-  late DateTime date;  // 日記所屬日期 (正規化為 00:00:00)
+  @Index()
+  DateTime date; // 日記日期
 
-  late DateTime createdAt; // 實際寫入時間
-  late DateTime updatedAt; 
+  DateTime createdAt;
+  DateTime updatedAt;
 
-  @Enumerated(EnumType.name)
-  late Mood mood; // Enum: happy, sad...
+  // 儲存 Mood Enum 的 index 或 String
+  String moodLabel; 
+  String specificEmoji; // 使用者選的具體 Emoji
 
-  late String specificEmoji; // 儲存具體的 emoji 字元，如 "🤬"
+  String? title;
+  String content; // Markdown 內容
 
-  String? title; // (Optional)
+  List<String> images; // 圖片路徑列表 (JSON String 或 StringList)
 
-  late String content; // Markdown raw text
-
-  List<String>? images; // 本地圖片路徑列表
-
-  // 儲存當下獲得的雞湯，避免未來 json 修改後回顧時變更
-  String? cachedQuoteContent; 
+  String? aiFeedback; // 獲得的 AI 回饋或語錄
 }
+
 ```
 
-### 3.3 雞湯資料庫 (JSON Asset)
+**Quote (ObjectBox Entity):**
+定義於 `lib/data/models/quote.dart`
 
-路徑: `assets/data/quotes.json`
+* 用於儲存內建及外部匯入的語錄，方便統一管理與隨機抽取。
 
-```json
-[
-  {
-    "id": "1001",
-    "content": "逃避雖可恥但有用，去睡覺吧。",
-    "category": "sad",
-    "author": "日劇台詞"
-  },
-  {
-    "id": "2001",
-    "content": "今天的快樂是奶茶給的！",
-    "category": "happy",
-    "author": "網友"
-  }
-]
-```
+---
 
------
+## 4. 技術堆疊 (Technical Stack)
 
-## 4\. 技術規格 (Technical Stack)
+* **Framework:** Flutter (Dart SDK ^3.0)
+* **State Management:** `flutter_riverpod` ^2.5.1
+* **Local Database:** `objectbox` ^2.4.0 (取代了 Isar)
+* **AI Integration:**
+* `google_generative_ai`: Gemini API 官方套件。
+* `http`: 用於 OpenAI / LM Studio REST API。
 
-  * **Language:** Dart / Flutter (最新 Stable 版本)
-  * **Architecture:** Feature-first or Layer-first (Clean Architecture 簡化版)
-  * **State Management:** `flutter_riverpod`
-  * **Database:** `objectbox`, `objectbox_flutter_libs`
-  * **UI Components:**
-      * Calendar: `table_calendar`
-      * Charts: `fl_chart` (用於之後的心情趨勢)
-      * Markdown: `flutter_markdown`
-      * Image Picker: `image_picker`
-  * **Utils:**
-      * Date Formatting: `intl`
-      * Path Provider: `path_provider` (存圖用)
-      * UUID: `uuid` (若需要生成圖片檔名)
 
------
+* **UI/UX Components:**
+* `table_calendar`: 日曆視圖。
+* `flutter_markdown`: 內容渲染。
+* `fl_chart`: 圓餅圖統計。
+* `flame` & `flame_forge2d`: 物理遊戲引擎。
 
-## 5\. UI 設計準則 (Design Guidelines)
 
-  * **色調:** 溫暖、療癒系。
-      * 背景色建議使用 `Off-white` (\#FDFBF7) 或淺灰，避免純白太刺眼。
-  * **字體:** 系統預設 Sans-serif，閱讀體驗優先。
-  * **Emoji:** 直接使用系統原生 Emoji 字型 (Android/iOS 自動適配)，不需額外引入圖檔。
+* **System/IO:**
+* `image_picker`: 圖片選取。
+* `path_provider`: 檔案路徑管理。
+* `archive`: ZIP 壓縮與解壓縮 (備份用)。
+* `file_picker`: 檔案選取 (匯入備份/語錄)。
+* `flutter_secure_storage`: 安全儲存 AI API Keys。
+* `share_plus`: 系統分享功能。
 
------
 
-## 6\. 開發階段 (Milestones,已完成階段)
 
-1.  **Phase 1: Skeleton (1-2 天)**
-      * 搭建專案，設定 Riverpod & ObjectBox。
-      * 完成 `Mood` Enum 定義與 `DiaryEntry` Entity (ObjectBox)。
-      * 確認 `assets/quotes.json` 讀取正常。
-2.  **Phase 2: Calendar & Editor (2-3 天)**
-      * 實作首頁日曆，能顯示假資料的 Emoji。
-      * 實作編輯頁，能存入文字並選擇心情。
-      * 串接 DB，讓首頁能讀到真實資料。
-3.  **Phase 3: Logic & Polish (1-2 天)**
-      * 實作雞湯隨機推薦邏輯。
-      * 實作圖片選擇與本地儲存。
-      * UI 細節調整 (Padding, Colors)。
+---
 
------
+## 5. UI 設計風格 (Design Guidelines)
 
-## 7. 待辦事項 / 未來展望 (To-Do / Future Roadmap)
+* **配色:** 溫暖療癒色系，根據 Mood Enum 動態調整部分 UI 顏色。
+* **Icons:** Material Icons + 系統原生 Emoji。
+* **平台適配:**
+* Android/iOS: 手機版面佈局。
+* Windows/Linux/macOS: 視窗化支援 (由 Flutter Desktop 提供)。
 
-1.  **雞湯擴充 (Custom Quote Import):**
-    *   **功能:** 支援匯入外部 JSON 檔案來新增自定義的隨機雞湯集。
-    *   **技術細節:**
-        *   使用 `file_selector` 或 `file_picker` 讓使用者選擇手機內的 JSON 檔案。
-        *   實作 JSON Schema 驗證邏輯，確保格式包含 `content`, `category` 等必要欄位。
-        *   將匯入的資料存入 ObjectBox 新增的 `Quote` Entity，或序列化存於 `ApplicationDocumentsDirectory` 的本地檔案中。
-        *   修改 `QuoteService`，使其能同時從 `assets` (內建) 與本地儲存 (自定義) 中隨機抽選。
 
-2.  **深色模式 (Dark Mode):**
-    *   **功能:** 完整支援 App 介面的深色主題切換。
-    *   **技術細節:**
-        *   在 `Riverpod` 中建立 `ThemeModeProvider` 管理主題狀態 (System / Light / Dark)。
-        *   使用 `shared_preferences` 持久化使用者的主題偏好。
-        *   在 `main.dart` 的 `MaterialApp` 中設定 `theme` (亮色) 與 `darkTheme` (深色)。
-        *   調整 `Mood` Enum 的顏色定義，確保在深色背景下的對比度與可讀性。
 
-3.  **AI 模式升級 (Multi-Provider AI):**
-    *   **功能:** 除了現有的本地 LM Studio 支援外，新增雲端 API 支援 (OpenAI, Gemini)。
-    *   **技術細節:**
-        *   **架構重構:** 建立 `AiService` 介面 (Interface)，並實作不同策略模式 (Strategy Pattern)：
-            *   `LocalAiService`: 呼叫本地 LM Studio (現有)。
-            *   `OpenAiService`: 呼叫 `https://api.openai.com/v1/chat/completions`。
-            *   `GeminiAiService`: 使用 `google_generative_ai` 套件。
-        *   **設定頁面:** 新增 API Key 輸入欄位與 Provider 切換選單。
-        *   **安全性:** 使用 `flutter_secure_storage` 安全地儲存使用者的 API Keys。
+---
+
+## 6. 當前開發進度 (Current Status)
+
+根據程式碼庫分析，以下功能 **已完成 (Implemented)**：
+
+1. ✅ **基礎架構**: Riverpod + ObjectBox 資料庫建置。
+2. ✅ **日記核心**: 日曆瀏覽、Markdown 編輯、圖片插入、情緒選擇。
+3. ✅ **進階 AI**:
+* 整合 Google Gemini, OpenAI, Local LLM。
+* 設定頁面可切換 Provider 並輸入 API Key。
+
+
+4. ✅ **資料安全**:
+* 完整的備份 (ZIP Export) 與還原機制。
+* Secure Storage 儲存金鑰。
+
+
+5. ✅ **統計與遊戲**:
+* Stats Screen 圓餅圖。
+* Mood Jar 物理掉落小遊戲。
+
+
+6. ✅ **語錄管理**: 支援從 `assets` 讀取及外部 JSON 匯入。
+
+---
+
+## 7. 未來優化方向 (Future Roadmap)
+
+1. **雲端同步 (Cloud Sync):**
+* 目前僅支援本地 ZIP 備份，未來可考慮整合 Google Drive API 進行自動雲端備份。
+
+
+2. **生物辨識鎖 (Biometric Lock):**
+* 新增 App 鎖定功能 (FaceID / 指紋)，進一步保護隱私。
+
+
+3. **多語言支援 (i18n):**
+* 目前介面主要為繁體中文，可增加英文或其他語言支援。
+
+
+4. **匯出 PDF/圖片:**
+* 利用 `screenshot` 套件將單篇日記生成精美卡片圖片分享 (程式碼中已有依賴，可持續優化 UI)。
