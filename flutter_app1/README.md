@@ -1,15 +1,7 @@
-這份規格書是根據您上傳的原始碼（Repo: `baiyanchen8/mood-diary`）以及 `README.md` 和 `pubspec.yaml` 的實際內容進行重寫的。
-
-目前的專案狀態已經超越了原本的 MVP（最小可行性產品）規劃，包含了更完整的 AI 整合、資料備份機制以及遊戲化元素。
-
-以下是更新後的專案規格書：
-
----
-
 # 專案規格書 (Project Specification) - Rev. 2.0
 
 **專案名稱:** Mood Diary (心情日記)
-**平台:** Cross-Platform (Android / iOS / Windows / Linux)
+**平台:** Cross-Platform (Android / iOS-- 尚未測試) 
 **版本:** v0.1.0
 **核心價值:** 本地優先 (Local-First)、隱私安全 (Privacy)、AI 情感陪伴 (AI Companionship)。
 
@@ -34,14 +26,14 @@ graph TD
         EditorScreen --> |1. 撰寫| InputText[Markdown / 圖片]
         EditorScreen --> |2. 選擇| MoodSelect[情緒選擇器]
         MoodSelect --> |3. 儲存| SaveAction[寫入 ObjectBox]
-        SaveAction --> |觸發| AILogic[雞湯生成 (本地/雲端)]
+        SaveAction --> |觸發| AILogic[雞湯生成 本地/雲端]
         AILogic --> |回饋| FeedbackDialog[顯示 AI 安慰/語錄]
     end
 
     subgraph Settings_Flow [系統設定]
-        SettingsScreen --> AI_Config[AI 供應商設定 (Gemini/OpenAI/Local)]
-        SettingsScreen --> Data_Manage[備份與還原 (ZIP)]
-        SettingsScreen --> Quote_Manage[語錄庫管理 (匯入 JSON)]
+        SettingsScreen --> AI_Config[AI 供應商設定 Gemini/OpenAI/Local]
+        SettingsScreen --> Data_Manage[備份與還原 ZIP]
+        SettingsScreen --> Quote_Manage[語錄庫管理 匯入 JSON]
     end
 
 ```
@@ -159,7 +151,7 @@ class DiaryEntry {
 * **Local Database:** `objectbox` ^2.4.0 (取代了 Isar)
 * **AI Integration:**
 * `google_generative_ai`: Gemini API 官方套件。
-* `http`: 用於 OpenAI / LM Studio REST API。
+* `http`: 用於 OpenAI（尚未測試） / LM Studio REST API。
 
 
 * **UI/UX Components:**
@@ -223,14 +215,9 @@ class DiaryEntry {
 1. **雲端同步 (Cloud Sync):**
 * 目前僅支援本地 ZIP 備份，未來可考慮整合 Google Drive API 進行自動雲端備份。
 
-
-2. **生物辨識鎖 (Biometric Lock):**
-* 新增 App 鎖定功能 (FaceID / 指紋)，進一步保護隱私。
-
-
-3. **多語言支援 (i18n):**
+2. **多語言支援 (i18n):**
 * 目前介面主要為繁體中文，可增加英文或其他語言支援。
 
-
-4. **匯出 PDF/圖片:**
-* 利用 `screenshot` 套件將單篇日記生成精美卡片圖片分享 (程式碼中已有依賴，可持續優化 UI)。
+3. **小功能新增**
+* 定時提醒功能
+* 桌面 widget 新增
